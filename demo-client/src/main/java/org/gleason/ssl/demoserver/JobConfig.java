@@ -1,5 +1,7 @@
 package org.gleason.ssl.demoserver;
 
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.Step;
@@ -14,12 +16,23 @@ import org.springframework.batch.support.transaction.ResourcelessTransactionMana
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.tcp.SslProvider;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.TrustManagerFactory;
 import javax.sql.DataSource;
+import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.SecureRandom;
 
 @Configuration
 @EnableBatchProcessing
@@ -39,13 +52,50 @@ public class JobConfig {
     @Bean
     public Step step1(
             JobRepository jobRepository,
-            PlatformTransactionManager transactionManager,
-            WebClient webClient
+            PlatformTransactionManager transactionManager
     ) {
         return new StepBuilder("my-step", jobRepository)
                 .tasklet((contribution, chunkContext) -> {
+                    // Load the p12 file from the classpath
+                    InputStream keystoreInputStream = new ClassPathResource("ssl/client_keystore.p12").getInputStream();
+
+// Create a KeyStore containing our trusted CAs
+                    KeyStore ks = KeyStore.getInstance("PKCS12");
+                    ks.load(keystoreInputStream, "changeit".toCharArray());
+
+                    KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+                    keyManagerFactory.init(ks, "changeit".toCharArray());
+
+                    TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                    trustManagerFactory.init(ks);
+
+// Initialize the SSLContext
+                    SSLContext sslContext = SSLContext.getInstance("TLSv1.3");
+                    sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());
+
+// Create a SslContextBuilder
+                    SslContextBuilder sslContextBuilder = SslContextBuilder.forClient()
+                            .keyManager(keyManagerFactory)
+                            .trustManager(trustManagerFactory);
+
+// Create a HttpClient that uses the custom SSLContext
+                    HttpClient httpClient = HttpClient.create()
+                            .secure(sslContextSpec -> {
+                                try {
+                                    sslContextSpec.sslContext(sslContextBuilder.build());
+                                } catch (SSLException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            });
+
+// Create a WebClient that uses the custom HttpClient
+                    WebClient webClient = WebClient.builder()
+                            .clientConnector(new ReactorClientHttpConnector(httpClient))
+                            .build();
+
+// Use the WebClient
                     String result = webClient.get()
-                            .uri("https://localhost:8080/test")
+                            .uri("https://localhost:8443/test")
                             .retrieve()
                             .bodyToMono(String.class)
                             .block();
