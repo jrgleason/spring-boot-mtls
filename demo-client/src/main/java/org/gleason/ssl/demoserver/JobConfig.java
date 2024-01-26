@@ -57,7 +57,7 @@ public class JobConfig {
         return new StepBuilder("my-step", jobRepository)
                 .tasklet((contribution, chunkContext) -> {
                     // Load the p12 file from the classpath
-                    InputStream keystoreInputStream = new ClassPathResource("ssl/client_keystore.p12").getInputStream();
+                    InputStream keystoreInputStream = new ClassPathResource("ssl/client.p12").getInputStream();
 
 // Create a KeyStore containing our trusted CAs
                     KeyStore ks = KeyStore.getInstance("PKCS12");
@@ -66,8 +66,13 @@ public class JobConfig {
                     KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
                     keyManagerFactory.init(ks, "changeit".toCharArray());
 
+                    InputStream truststoreInputStream = new ClassPathResource("ssl/truststore.p12").getInputStream();
+                    KeyStore ts = KeyStore.getInstance("PKCS12");
+                    ts.load(truststoreInputStream, "changeit".toCharArray());
+
+
                     TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-                    trustManagerFactory.init(ks);
+                    trustManagerFactory.init(ts);
 
 // Initialize the SSLContext
                     SSLContext sslContext = SSLContext.getInstance("TLSv1.3");
@@ -77,7 +82,7 @@ public class JobConfig {
                     SslContextBuilder sslContextBuilder = SslContextBuilder.forClient()
                             .keyManager(keyManagerFactory)
                             .trustManager(trustManagerFactory);
-
+                    sslContextBuilder.build();
 // Create a HttpClient that uses the custom SSLContext
                     HttpClient httpClient = HttpClient.create()
                             .secure(sslContextSpec -> {
