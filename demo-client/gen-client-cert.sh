@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Variables
-alias=client1
+alias=client
 keyalg=RSA
 keysize=2048
 storetype=PKCS12
@@ -17,7 +17,10 @@ rm -rf ./src/main/resources/ssl
 mkdir -p ./src/main/resources/ssl
 
 # Generate a new key pair and store it in a new keystore
-keytool -genkeypair -alias $alias -keyalg $keyalg -keysize $keysize -storetype $storetype -keystore $keystore -validity $validity -storepass $password -dname "CN=client1"
+keytool -genkeypair -alias $alias -keyalg $keyalg -keysize $keysize -storetype $storetype -keystore $keystore -validity $validity -storepass $password -dname "CN=client"
+keytool -genkeypair -alias client2 -keyalg $keyalg -keysize $keysize -storetype $storetype -keystore $keystore -validity $validity -storepass $password -dname "CN=client2"
+keytool -genkeypair -alias client3 -keyalg $keyalg -keysize $keysize -storetype $storetype -keystore $keystore -validity $validity -storepass $password -dname "CN=client3"
+
 
 # Export the certificate from the keystore
 keytool -exportcert -alias $alias -file $certificate -keystore $keystore -storepass $password
