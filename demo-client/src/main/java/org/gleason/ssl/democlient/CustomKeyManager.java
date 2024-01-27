@@ -1,22 +1,22 @@
 package org.gleason.ssl.democlient;
 
+import lombok.AllArgsConstructor;
+
 import javax.net.ssl.X509ExtendedKeyManager;
 import java.net.Socket;
 import java.security.Principal;
 import java.security.PrivateKey;
 
+@AllArgsConstructor
 public class CustomKeyManager extends X509ExtendedKeyManager {
     private final X509ExtendedKeyManager delegate;
-
-    public CustomKeyManager(X509ExtendedKeyManager delegate) {
-        this.delegate = delegate;
-    }
+    private final String alias;
 
     @Override
     public String chooseEngineClientAlias(String[] keyType, Principal[] issuers, javax.net.ssl.SSLEngine engine) {
         // Implement your custom logic here
         // For example, return the first alias that matches a specific condition
-        return "client";
+        return alias;
     }
 
     // Delegate other methods to the original KeyManager

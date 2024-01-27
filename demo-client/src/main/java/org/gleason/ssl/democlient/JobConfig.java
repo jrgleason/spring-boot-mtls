@@ -57,8 +57,9 @@ public class JobConfig {
                     KeyStore ks = KeyStore.getInstance("PKCS12");
                     ks.load(keystoreInputStream, "changeit".toCharArray());
 
-                    KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-                    keyManagerFactory.init(ks, "changeit".toCharArray());
+                    KeyManagerFactory delegate = CustomKeyManagerFactory.getInstance(CustomKeyManagerFactory.getDefaultAlgorithm());
+                    delegate.init(ks, "changeit".toCharArray());
+                    KeyManagerFactory keyManagerFactory = new CustomKeyManagerFactory(delegate, "client");
 
                     InputStream truststoreInputStream = new ClassPathResource("ssl/truststore.p12").getInputStream();
                     KeyStore ts = KeyStore.getInstance("PKCS12");
@@ -68,10 +69,9 @@ public class JobConfig {
                     TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
                     trustManagerFactory.init(ts);
 
-                    X509ExtendedKeyManager customKeyManager = new CustomKeyManager((X509ExtendedKeyManager) keyManagerFactory.getKeyManagers()[0]);
 
                     SslContextBuilder sslContextBuilder = SslContextBuilder.forClient()
-                            .keyManager(customKeyManager)
+                            .keyManager(keyManagerFactory)
                             .trustManager(trustManagerFactory);
 
 // Create a SslContextBuilder
