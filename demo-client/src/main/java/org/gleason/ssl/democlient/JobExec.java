@@ -1,4 +1,4 @@
-package org.gleason.ssl.demoserver;
+package org.gleason.ssl.democlient;
 
 
 import org.springframework.batch.core.JobExecutionListener;
