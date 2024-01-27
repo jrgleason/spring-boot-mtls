@@ -71,11 +71,16 @@ public class JobConfig {
                     TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
                     trustManagerFactory.init(ts);
 
+                    X509ExtendedKeyManager customKeyManager = new CustomKeyManager((X509ExtendedKeyManager) keyManagerFactory.getKeyManagers()[0]);
+
+                    SslContextBuilder sslContextBuilder = SslContextBuilder.forClient()
+                            .keyManager(customKeyManager)
+                            .trustManager(trustManagerFactory);
 
 // Create a SslContextBuilder
-                    SslContextBuilder sslContextBuilder = SslContextBuilder.forClient()
-                            .keyManager(keyManagerFactory)
-                            .trustManager(trustManagerFactory);
+//                    SslContextBuilder sslContextBuilder = SslContextBuilder.forClient()
+//                            .keyManager(keyManagerFactory)
+//                            .trustManager(trustManagerFactory);
 // Create a HttpClient that uses the custom SSLContext
                     HttpClient httpClient = HttpClient.create()
                             .secure(sslContextSpec -> {

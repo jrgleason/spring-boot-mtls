@@ -26,7 +26,7 @@ keytool -genkeypair -alias client3 -keyalg $keyalg -keysize $keysize -storetype 
 keytool -exportcert -alias $alias -file $certificate -keystore $keystore -storepass $password
 
 # Import your cert to the server so they know who you are
-keytool -importcert -file $certificate -alias $alias -keystore $server_truststore -noprompt -storepass $password
+keytool -importcert -file $certificate -alias something-else -keystore $server_truststore -noprompt -storepass $password
 
 # Take in the server cert so you know who they are
 keytool -importcert -file $server_cert -alias server -keystore $truststore -noprompt -storepass $password
