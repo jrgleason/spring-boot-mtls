@@ -1,4 +1,4 @@
-package org.gleason.ssl.demoserver;
+package org.gleason.ssl.democlient;
 
 import io.netty.handler.ssl.SslContextBuilder;
 import org.springframework.batch.core.Job;
@@ -26,10 +26,7 @@ import reactor.netty.http.client.HttpClient;
 import javax.net.ssl.*;
 import javax.sql.DataSource;
 import java.io.InputStream;
-import java.net.Socket;
 import java.security.KeyStore;
-import java.security.Principal;
-import java.security.SecureRandom;
 
 @Configuration
 @EnableBatchProcessing

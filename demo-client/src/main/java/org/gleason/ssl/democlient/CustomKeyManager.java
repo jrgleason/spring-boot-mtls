@@ -1,4 +1,4 @@
-package org.gleason.ssl.demoserver;
+package org.gleason.ssl.democlient;
 
 import javax.net.ssl.X509ExtendedKeyManager;
 import java.net.Socket;
@@ -16,7 +16,7 @@ public class CustomKeyManager extends X509ExtendedKeyManager {
     public String chooseEngineClientAlias(String[] keyType, Principal[] issuers, javax.net.ssl.SSLEngine engine) {
         // Implement your custom logic here
         // For example, return the first alias that matches a specific condition
-        return "client3";
+        return "client";
     }
 
     // Delegate other methods to the original KeyManager
