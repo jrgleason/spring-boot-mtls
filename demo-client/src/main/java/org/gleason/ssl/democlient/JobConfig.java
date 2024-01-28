@@ -13,6 +13,7 @@ import org.springframework.batch.core.repository.support.JobRepositoryFactoryBea
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.support.transaction.ResourcelessTransactionManager;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -46,25 +47,47 @@ public class JobConfig {
     @Bean
     public Step step1(
             JobRepository jobRepository,
-            PlatformTransactionManager transactionManager
+            PlatformTransactionManager transactionManager,
+            KeyStoreConfig keyStoreConfig,
+            TrustStoreConfig trustStoreConfig,
+            @Value("${client.url}") String url
     ) {
         return new StepBuilder("my-step", jobRepository)
                 .tasklet((contribution, chunkContext) -> {
                     // Load the p12 file from the classpath
-                    InputStream keystoreInputStream = new ClassPathResource("ssl/client.p12").getInputStream();
+                    InputStream keystoreInputStream = new ClassPathResource(
+                            keyStoreConfig.getLocation()
+                    ).getInputStream();
+                    KeyStore ks = KeyStore.getInstance(
+                            keyStoreConfig.getType()
+                    );
+                    ks.load(
+                            keystoreInputStream,
+                            keyStoreConfig.getPassword()
+                    );
 
-// Create a KeyStore containing our trusted CAs
-                    KeyStore ks = KeyStore.getInstance("PKCS12");
-                    ks.load(keystoreInputStream, "changeit".toCharArray());
+                    KeyManagerFactory delegate = CustomKeyManagerFactory.getInstance(
+                            CustomKeyManagerFactory.getDefaultAlgorithm()
+                    );
+                    delegate.init(
+                            ks,
+                            keyStoreConfig.getPassword()
+                    );
+                    KeyManagerFactory keyManagerFactory = new CustomKeyManagerFactory(
+                            delegate,
+                            keyStoreConfig.getAlias()
+                    );
 
-                    KeyManagerFactory delegate = CustomKeyManagerFactory.getInstance(CustomKeyManagerFactory.getDefaultAlgorithm());
-                    delegate.init(ks, "changeit".toCharArray());
-                    KeyManagerFactory keyManagerFactory = new CustomKeyManagerFactory(delegate, "client");
-
-                    InputStream truststoreInputStream = new ClassPathResource("ssl/truststore.p12").getInputStream();
-                    KeyStore ts = KeyStore.getInstance("PKCS12");
-                    ts.load(truststoreInputStream, "changeit".toCharArray());
-
+                    InputStream truststoreInputStream = new ClassPathResource(
+                            trustStoreConfig.getLocation()
+                    ).getInputStream();
+                    KeyStore ts = KeyStore.getInstance(
+                            trustStoreConfig.getType()
+                    );
+                    ts.load(
+                            truststoreInputStream,
+                            trustStoreConfig.getPassword()
+                    );
 
                     TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
                     trustManagerFactory.init(ts);
@@ -95,7 +118,7 @@ public class JobConfig {
 
 // Use the WebClient
                     String result = webClient.get()
-                            .uri("https://localhost:8443/test")
+                            .uri(url)
                             .retrieve()
                             .bodyToMono(String.class)
                             .block();
