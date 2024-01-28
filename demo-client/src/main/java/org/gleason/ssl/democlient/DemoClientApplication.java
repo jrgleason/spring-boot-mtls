@@ -7,9 +7,11 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.ApplicationContext;
 
 @SpringBootApplication
+@ConfigurationPropertiesScan
 public class DemoClientApplication implements CommandLineRunner {
 
     private final JobLauncher jobLauncher;

@@ -31,6 +31,7 @@ keytool -importcert -file $certificate -alias something-else -keystore $server_t
 # Take in the server cert so you know who they are
 keytool -importcert -file $server_cert -alias server -keystore $truststore -noprompt -storepass $password
 
+echo "Client keystore"
 keytool -list -keystore $keystore -storepass $password
 keytool -list -keystore $truststore -storepass $password
 keytool -list -keystore $server_truststore -storepass $password

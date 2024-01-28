@@ -7,3 +7,12 @@ spring:
       initialize-schema: always
 server:
   port: 8081
+client:
+  url: ${CLIENT_URL:https://localhost:8443/test}
+  key-store:
+    location: ssl/client.p12
+    password: ${KEYSTORE_PASSWORD:changeit}
+    alias: client
+  trust-store:
+    location: ssl/truststore.p12
+    password: ${KEYSTORE_PASSWORD:changeit}
